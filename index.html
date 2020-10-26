@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <link data-require="bootstrap@3.3.7" data-semver="3.3.7" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <script data-require="jquery@3.0.0" data-semver="2.2.4" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script data-require="bootstrap@3.3.7" data-semver="3.3.7" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script>
+              var schema = {
+      "title": "Person",
+      "type": "object",
+      "properties": {
+        "Nombre":{
+            "type":"string",
+            "minLength": 10,
+            "default":"jorge garcia"
+        },
+        "name": {
+          "type": "string",
+          "description": "First and Last name",
+          "minLength": 4,
+          "default": "Jeremy Dorn"
+        },
+        "age": {
+          "type": "integer",
+          "default": 25,
+          "minimum": 18,
+          "maximum": 99
+        },
+        "favorite_color": {
+          "type": "string",
+          "format": "color",
+          "title": "favorite color",
+          "default": "#ffa500"
+        },
+        "gender": {
+          "type": "string",
+          "enum": [
+            "male",
+            "female"
+          ]
+        },
+        "location": {
+          "type": "object",
+          "title": "Location",
+          "properties": {
+            "city": {
+              "type": "string",
+              "default": "San Francisco"
+            },
+            "state": {
+              "type": "string",
+              "default": "CA"
+            },
+            "citystate": {
+              "type": "string",
+              "description": "This is generated automatically from the previous two fields",
+              "template": "{{city}}, {{state}}",
+              "watch": {
+                "city": "location.city",
+                "state": "location.state"
+              }
+            }
+          }
+        },
+        "pets": {
+          "type": "array",
+          "format": "table",
+          "title": "Pets",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "title": "Pet",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "cat",
+                  "dog",
+                  "bird",
+                  "reptile",
+                  "other"
+                ],
+                "default": "dog"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "default": [
+            {
+              "type": "dog",
+              "name": "Walter"
+            }
+          ]
+        }
+      }
+    };
+
+    var schemaLDAP = {
+      "title": "LDAP configuration",
+      "type": "object",
+      "properties": {
+        "enabled":{
+            "type": "boolean",
+            "title":"LDAP Autentication Enabled",
+            "required":true,
+            "default":false
+        },
+        "ldapServer":{
+            "type":"string",
+            "title":"LDAP Server IP",
+            "minLength": 5,
+            "maxLength": 32
+        },
+        "ldapPort": {
+          "type": "integer",
+          "title": "LDAP Server Port",
+          "minimum": 1,
+          "maximum": "65535"
+        },
+        "domain": {
+          "type": "string",
+          "title":"Domain",
+          "minLength": 5,
+          "maxLength": 32
+        },
+        "serviceAccount" : {
+            "type":"object",
+            "title": "Service Account",
+            "properties":{
+                "userName":{
+                    "type": "string",
+                    "title": "User Name",
+                    "minLength": 5,
+                    "maxLength": 128
+                },
+                "userPassword":{
+                    "type": "string",
+                    "title": "Password",
+                    "minLength": 4,
+                    "maxLength": 128
+                },
+
+            }
+        },
+        "groups": {
+            "type":"array",
+            "title":"Groups and Roles",
+            "format":"table",
+            "items": {
+                "type":"object",
+                "title":"group",
+                "properties": {
+                    "ldapGroup": {
+                        "title":"LDAP Group or UO",
+                        "type":"string",
+                        "minLength": 4,
+                        "maxLength": 128
+                    },
+                    "role":{
+                        "title":"Rol",
+                        "type":"string",
+                        "required":true,
+                        "enum": [
+                            "WSOwner",
+                            "Pentester",
+                            "Approver",
+                            "Need Approval",
+                            "Business",
+                            "Viewer"
+                        ]
+                    }
+                }
+            }
+        }
+      }
+    };
+    
+
+    var value = {
+      "Nombre":"Jorge Garcia",
+      "name": "Jeremy Dorn",
+      "age": 25,
+      "favorite_color": "#ffa500",
+      "gender": "male",
+      "location": {
+        "city": "San Francisco",
+        "state": "CA",
+        "citystate": "San Francisco, CA"
+      },
+      "pets": [
+        {
+          "type": "dog",
+          "name": "Walter"
+        }
+      ]
+    };
+    var valueLDAP = {
+        "enabled":true,
+        "ldapServer": "192.168.1.1",
+        "ldapPort": 389,
+        "domain": "DC=local,DC=sidertia",
+        "serviceAccount":{
+            "userName":"svcaccountldap",
+            "userPassword":"pwwwddd112"
+        },
+        "groups":[
+            {
+                "ldapGroup":"DC=Users,DC=ANA,DC=Pentesters",
+                "role":"Pentester"
+            }
+        ]
+
+    };
+    </script>
+    <script src="json-editor.js"></script>
+    <script>
+    var editor = null;
+    $(document).ready(function (){ 
+    // Set default options
+    JSONEditor.defaults.options.theme = 'bootstrap3';
+    editor = new JSONEditor(document.getElementById("editor-holder"),{
+           theme: 'bootstrap3',
+           schema: schemaLDAP,
+        });
+    editor.setValue(valueLDAP);
+    // Validate
+    var errors = editor.validate();
+    if(errors.length) {
+      // Not valid
+    }
+    
+    // Listen for changes
+    editor.on("change",  function() {
+      // Do something...
+    });
+    });
+    </script>  
+  </head>
+
+  <body>
+    <h1>JSON Editor example</h1>
+    <div id="get-value">
+       <button onclick="alert(JSON.stringify(editor.getValue()))">Json Current Value</button>
+    </div>
+    <div id="editor-holder" style="width: 600px;"></div>
+    
+  </body>
+
+</html>
